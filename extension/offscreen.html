@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebLLM Offscreen</title>
+    <script src="webllm.js"></script>
+</head>
+<body>
+    <script>
+        let webLLMEngine = null;
+        let modelLoaded = false;
+
+        // Initialize WebLLM when offscreen document is created
+        async function initializeWebLLM() {
+            try {
+                console.log('Initializing WebLLM in offscreen document...');
+                
+                webLLMEngine = await webllm.CreateMLCEngine("Phi-3-mini-4k-instruct-q4f16_1-MLC", {
+                    initProgressCallback: (progress) => {
+                        console.log(`Model loading: ${progress.text} ${Math.round(progress.progress * 100)}%`);
+                        
+                        // Send progress to background script
+                        chrome.runtime.sendMessage({
+                            action: 'webllm_progress',
+                            progress: progress
+                        });
+                    }
+                });
+                
+                modelLoaded = true;
+                console.log('WebLLM successfully initialized in offscreen!');
+                
+                // Notify background script
+                chrome.runtime.sendMessage({
+                    action: 'webllm_ready',
+                    success: true
+                });
+                
+                return { success: true };
+                
+            } catch (error) {
+                console.error('WebLLM initialization failed:', error);
+                modelLoaded = false;
+                
+                chrome.runtime.sendMessage({
+                    action: 'webllm_ready',
+                    success: false,
+                    error: error.message
+                });
+                
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Analyze content using WebLLM
+        async function analyzeContent(data) {
+            if (!modelLoaded || !webLLMEngine) {
+                throw new Error('WebLLM not initialized');
+            }
+
+            try {
+                const prompt = `Analyze this content and provide a JSON response:
+Title: "${data.title}"
+Domain: "${data.domain}"
+Content: "${data.content?.substring(0, 1000) || 'No content'}"
+Time spent: ${data.timeSpent} seconds
+
+Please provide:
+1. Quality score (0-100)
+2. Should save (true/false)
+3. 2-3 sentence summary
+4. 3-5 relevant tags
+5. Content category
+
+Response format: {"score": number, "shouldSave": boolean, "summary": "text", "tags": ["tag1", "tag2"], "category": "category"}`;
+
+                const response = await webLLMEngine.chat.completions.create({
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.3,
+                    max_tokens: 300
+                });
+
+                const aiResponse = response.choices[0].message.content;
+                let analysis;
+                
+                try {
+                    analysis = JSON.parse(aiResponse);
+                } catch (parseError) {
+                    console.error('Failed to parse AI response:', aiResponse);
+                    throw new Error('Invalid AI response format');
+                }
+                
+                return {
+                    score: analysis.score || 50,
+                    shouldSave: analysis.shouldSave || false,
+                    summary: analysis.summary || 'AI-generated summary not available',
+                    tags: analysis.tags || [],
+                    category: analysis.category || 'general',
+                    analysis: {
+                        contentQuality: analysis.score >= 70 ? 'high' : analysis.score >= 50 ? 'medium' : 'low',
+                        engagementLevel: data.timeSpent > 300 ? 'high' : data.timeSpent > 60 ? 'medium' : 'low',
+                        aiGenerated: true
+                    }
+                };
+
+            } catch (error) {
+                console.error('Content analysis failed:', error);
+                throw error;
+            }
+        }
+
+        // Generate smart summary
+        async function generateSummary(content, title) {
+            if (!modelLoaded || !webLLMEngine) {
+                throw new Error('WebLLM not initialized');
+            }
+
+            try {
+                const prompt = `Create a concise 2-3 sentence summary of this content:
+Title: "${title}"
+Content: "${content.substring(0, 2000)}"
+
+Make it informative and capture the main points.`;
+
+                const response = await webLLMEngine.chat.completions.create({
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.3,
+                    max_tokens: 150
+                });
+
+                return response.choices[0].message.content.trim();
+                
+            } catch (error) {
+                console.error('Summary generation failed:', error);
+                throw error;
+            }
+        }
+
+        // Listen for messages from background script
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+            console.log('Offscreen received message:', request.action);
+            
+            switch (request.action) {
+                case 'initializeWebLLM':
+                    initializeWebLLM().then(result => {
+                        sendResponse(result);
+                    }).catch(error => {
+                        sendResponse({ success: false, error: error.message });
+                    });
+                    return true; // Keep message channel open for async response
+                
+                case 'analyzeContent':
+                    analyzeContent(request.data).then(analysis => {
+                        sendResponse({ success: true, analysis });
+                    }).catch(error => {
+                        sendResponse({ success: false, error: error.message });
+                    });
+                    return true;
+                
+                case 'generateSummary':
+                    generateSummary(request.content, request.title).then(summary => {
+                        sendResponse({ success: true, summary });
+                    }).catch(error => {
+                        sendResponse({ success: false, error: error.message });
+                    });
+                    return true;
+                
+                case 'getStatus':
+                    sendResponse({ 
+                        modelLoaded, 
+                        engineAvailable: !!webLLMEngine 
+                    });
+                    break;
+                
+                default:
+                    sendResponse({ success: false, error: 'Unknown action' });
+            }
+        });
+
+        // Auto-initialize when offscreen document loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Offscreen document loaded, initializing WebLLM...');
+            initializeWebLLM();
+        });
+
+        // Initialize immediately if DOM is already loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeWebLLM);
+        } else {
+            initializeWebLLM();
+        }
+    </script>
+</body>
+</html>
