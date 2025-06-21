@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Tracker Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .help-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .ai-status {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Smart Tracker Settings</h1>
+            <p>Configure your reading and watching tracker preferences</p>
+        </div>
+
+        <div class="content">
+            <!-- AI Configuration Section -->
+            <div class="section">
+                <h2>
+                    <div class="section-icon">🤖</div>
+                    AI Configuration
+                </h2>
+                
+                <div class="ai-status" id="aiStatus">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0;">AI Status</h3>
+                        <div class="status-indicator status-loading" id="statusIndicator">
+                            <span id="statusText">Checking...</span>
+                        </div>
+                    </div>
+                    <div id="loadingProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <p style="margin-top: 10px; font-size: 14px; color: #666;" id="progressText">Initializing AI...</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 15px;">
+                        <span>Enable Local AI Analysis</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="enableAI" checked>
+                            <span class="slider"></span>
+                        </div>
+                    </label>
+                    <div class="help-text">Uses local AI to analyze and categorize your content automatically</div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 15px;">
+                        <span>Auto-analyze New Content</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="autoAnalyze" checked>
+                            <span class="slider"></span>
+                        </div>
+                    </label>
+                    <div class="help-text">Automatically analyze content as you browse</div>
+                </div>
+            </div>
+
+            <!-- Content Filtering Section -->
+            <div class="section">
+                <h2>
+                    <div class="section-icon">🔍</div>
+                    Content Filtering
+                </h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="minReadingTime">Minimum Reading Time (seconds)</label>
+                        <input type="number" id="minReadingTime" value="30" min="5" max="300">
+                        <div class="help-text">Only track content you spend at least this much time reading</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="qualityThreshold">Quality Threshold (1-10)</label>
+                        <input type="number" id="qualityThreshold" value="5" min="1" max="10">
+                        <div class="help-text">Only show content with quality score above this threshold</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="excludeDomains">Exclude Domains</label>
+                    <textarea id="excludeDomains" rows="3" placeholder="Enter domains to exclude, one per line&#10;example.com&#10;spam-site.com"></textarea>
+                    <div class="help-text">Domains listed here will not be tracked</div>
+                </div>
+            </div>
+
+            <!-- Privacy & Data Section -->
+            <div class="section">
+                <h2>
+                    <div class="section-icon">🔒</div>
+                    Privacy & Data
+                </h2>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 15px;">
+                        <span>Store Full Page Content</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="storeFullContent">
+                            <span class="slider"></span>
+                        </div>
+                    </label>
+                    <div class="help-text">Store complete page text for better analysis (uses more storage)</div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 15px;">
+                        <span>Track Private/Incognito Browsing</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="trackPrivate">
+                            <span class="slider"></span>
+                        </div>
+                    </label>
+                    <div class="help-text">Also track content viewed in private browsing mode</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dataRetention">Data Retention (days)</label>
+                        <select id="dataRetention">
+                            <option value="7">1 Week</option>
+                            <option value="30" selected>1 Month</option>
+                            <option value="90">3 Months</option>
+                            <option value="365">1 Year</option>
+                            <option value="-1">Forever</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxItems">Maximum Items to Store</label>
+                        <select id="maxItems">
+                            <option value="100">100 Items</option>
+                            <option value="500">500 Items</option>
+                            <option value="1000" selected>1000 Items</option>
+                            <option value="5000">5000 Items</option>
+                            <option value="-1">Unlimited</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export & Backup Section -->
+            <div class="section">
+                <h2>
+                    <div class="section-icon">📤</div>
+                    Export & Backup
+                </h2>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">📁</div>
+                        <h3>Export Data</h3>
+                        <p>Download your tracked content as JSON or CSV</p>
+                        <button class="btn" id="exportBtn" style="margin-top: 10px;">Export Now</button>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Backup Settings</h3>
+                        <p>Save your current configuration</p>
+                        <button class="btn btn-secondary" id="backupBtn" style="margin-top: 10px;">Backup</button>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📥</div>
+                        <h3>Import Data</h3>
+                        <p>Restore from a previous backup</p>
+                        <input type="file" id="importFile" accept=".json" style="display: none;">
+                        <button class="btn btn-secondary" id="importBtn" style="margin-top: 10px;">Import</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="section" style="border-left-color: #dc3545;">
+                <h2>
+                    <div class="section-icon" style="background: #dc3545;">⚠️</div>
+                    Danger Zone
+                </h2>
+
+                <div class="feature-grid">
+                    <div class="feature-card" style="border-color: #dc3545;">
+                        <div class="feature-icon" style="background: #dc3545;">🗑️</div>
+                        <h3>Clear All Data</h3>
+                        <p>Permanently delete all tracked content</p>
+                        <button class="btn btn-danger" id="clearDataBtn" style="margin-top: 10px;">Clear Data</button>
+                    </div>
+
+                    <div class="feature-card" style="border-color: #dc3545;">
+                        <div class="feature-icon" style="background: #dc3545;">🔄</div>
+                        <h3>Reset Settings</h3>
+                        <p>Restore all settings to default values</p>
+                        <button class="btn btn-danger" id="resetSettingsBtn" style="margin-top: 10px;">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="actions">
+                <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button class="btn" id="saveBtn">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>
